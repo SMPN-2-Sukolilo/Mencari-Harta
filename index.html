@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Informatika Treasure Quest</title>
+<meta name="theme-color" content="#17163a">
+<style>
+:root{--bg:#17163a;--card:#1f1d4d;--gold:#ffd24a;--mint:#5ef0b4;--red:#ff6b6b;--ink:#f4f2ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:"Trebuchet MS",Verdana,sans-serif;touch-action:none;overscroll-behavior:none}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 6px) 8px calc(env(safe-area-inset-bottom,0px) + 8px)}
+#hud{display:flex;align-items:center;gap:6px;font-weight:800;font-size:15px;padding:2px 2px 6px}
+#hud .st{flex:1;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#hud b{color:var(--gold)}#lv{color:var(--red);letter-spacing:1px}
+.ib{width:38px;height:38px;border-radius:10px;border:0;background:#34328a;color:var(--ink);font-size:17px;box-shadow:0 3px 0 #1a1950}
+.ib:active{transform:translateY(3px);box-shadow:none}
+#wrap{position:relative;flex:1;min-height:0}
+#cv{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;display:block;border-radius:10px}
+#cv.good{animation:g .45s}#cv.bad{animation:b .45s}
+@keyframes g{0%{box-shadow:inset 0 0 0 40px rgba(94,240,180,.35)}100%{box-shadow:inset 0 0 0 40px rgba(94,240,180,0)}}
+@keyframes b{0%{box-shadow:inset 0 0 0 40px rgba(255,107,107,.45)}100%{box-shadow:inset 0 0 0 40px rgba(255,107,107,0)}}
+#toast{position:absolute;left:50%;top:8px;transform:translateX(-50%);background:rgba(10,9,32,.88);border:2px solid var(--gold);padding:6px 12px;border-radius:10px;font-weight:800;font-size:14px;text-align:center;max-width:92%;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.on{opacity:1}
+.pad{display:grid;grid-template-columns:repeat(3,76px);grid-template-rows:repeat(2,66px);gap:6px;justify-content:center;padding-top:8px}
+.k{border:0;border-radius:16px;background:#4a47a3;color:#fff;font-size:26px;box-shadow:0 5px 0 #2a285c;touch-action:none}
+.k.on,.k:active{transform:translateY(5px);box-shadow:none;background:#6f6cd6}
+.k[data-d=u]{grid-column:2;grid-row:1}.k[data-d=l]{grid-column:1;grid-row:2}.k[data-d=d]{grid-column:2;grid-row:2}.k[data-d=r]{grid-column:3;grid-row:2}
+#ov{position:fixed;inset:0;background:rgba(8,7,28,.82);display:none;align-items:center;justify-content:center;padding:14px;z-index:5}
+.card{width:100%;max-width:460px;max-height:100%;overflow:auto;touch-action:pan-y;background:var(--card);border:3px solid var(--gold);border-radius:18px;padding:18px;box-shadow:0 8px 0 #0e0d26;text-align:center}
+.card h1{margin:0 0 4px;font-size:34px;line-height:1.05;color:var(--gold);text-shadow:3px 3px 0 #7a3fb5;letter-spacing:1px}
+.card h2{margin:0 0 8px;font-size:24px;color:var(--gold)}
+.card p{margin:6px 0;line-height:1.45;font-size:15px}
+.card ul{text-align:left;padding-left:20px;margin:8px 0;line-height:1.5;font-size:15px}
+.sub{color:var(--mint);font-weight:700}
+.btn{display:block;width:100%;margin:10px 0 0;padding:14px;border:0;border-radius:12px;background:var(--gold);color:#2a1b00;font:800 18px "Trebuchet MS",Verdana,sans-serif;box-shadow:0 5px 0 #b8860b}
+.btn.alt{background:#5f5cc4;color:#fff;box-shadow:0 5px 0 #34328a}
+.btn:active{transform:translateY(5px);box-shadow:none}
+.q{font-size:18px;font-weight:800;line-height:1.35;margin:4px 0 10px;text-align:left}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px;border-radius:12px;border:2px solid #5f5cc4;background:#2b2970;color:var(--ink);font:700 16px/1.3 "Trebuchet MS",Verdana,sans-serif}
+.opt:active{background:#3b38a0}
+.opt.ok{background:#1f8a5f;border-color:var(--mint)}.opt.no{background:#a63a4a;border-color:var(--red)}
+.fb{margin-top:10px;padding:10px;border-radius:10px;background:#15143a;text-align:left;font-size:15px;line-height:1.4}
+.big{font-size:44px;margin:4px 0}
+.stat{font-size:18px;font-weight:800}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <div class="st"><span>Skor <b id="sc">0</b></span><span id="lv"></span><span>Peti <b id="ch">0/6</b></span><span id="ky">Kunci -</span></div>
+    <button class="ib" id="bs" aria-label="Suara">🔊</button>
+    <button class="ib" id="bp" aria-label="Jeda">⏸</button>
+    <button class="ib" id="br" aria-label="Mulai ulang">↻</button>
+  </div>
+  <div id="wrap"><canvas id="cv"></canvas><div id="toast"></div></div>
+  <div class="pad">
+    <button class="k" data-d="u" aria-label="Atas">▲</button>
+    <button class="k" data-d="l" aria-label="Kiri">◀</button>
+    <button class="k" data-d="d" aria-label="Bawah">▼</button>
+    <button class="k" data-d="r" aria-label="Kanan">▶</button>
+  </div>
+</div>
+<div id="ov"></div>
+
+<script>
+/* ===== PENGATURAN (ubah di sini) ===== */
+const CFG={LIVES:3,POINTS:100,BONUS:50,CHESTS:6,MONSTERS:3,STARS:3};
+
+/* ===== BANK PERTANYAAN =====
+   Pilihan PERTAMA selalu jawaban benar. Urutan diacak otomatis saat tampil. */
+const Q=[
+{q:"Apa yang dimaksud dengan sistem komputasi?",o:["Gabungan hardware, software, dan brainware yang bekerja sama mengolah data","Kumpulan permainan di komputer","Alat untuk mencetak dokumen","Kabel penghubung antar komputer"],e:"Sistem komputasi terdiri dari tiga unsur: hardware, software, dan brainware."},
+{q:"Manakah yang termasuk hardware (perangkat keras)?",o:["Monitor","Windows","Pengguna komputer","Microsoft Word"],e:"Hardware adalah perangkat yang bisa dilihat dan disentuh, misalnya monitor."},
+{q:"Software (perangkat lunak) adalah...",o:["Program yang memberi perintah kepada hardware","Bagian komputer yang bisa disentuh","Orang yang memakai komputer","Kabel listrik komputer"],e:"Software berupa program atau instruksi yang tidak bisa disentuh."},
+{q:"Brainware dalam sistem komputasi adalah...",o:["Manusia yang mengoperasikan komputer","Mouse dan keyboard","Sistem operasi","Hard disk"],e:"Brainware adalah pengguna, misalnya operator, programmer, dan analis sistem."},
+{q:"Manakah yang termasuk perangkat input?",o:["Keyboard","Printer","Speaker","Monitor"],e:"Perangkat input memasukkan data ke komputer, contohnya keyboard dan mouse."},
+{q:"Manakah yang termasuk perangkat output?",o:["Printer","Mouse","Scanner","Mikrofon"],e:"Perangkat output menampilkan hasil pengolahan, contohnya printer dan monitor."},
+{q:"Perangkat pemrosesan utama pada komputer adalah...",o:["CPU (Central Processing Unit)","Flashdisk","Webcam","Proyektor"],e:"CPU berfungsi sebagai otak komputer yang mengolah data."},
+{q:"Manakah yang termasuk perangkat penyimpanan?",o:["Hard disk","Keyboard","Speaker","Monitor"],e:"Hard disk, SSD, dan flashdisk dipakai untuk menyimpan data."},
+{q:"Urutan cara kerja sistem komputer yang benar adalah...",o:["Input → Proses → Output","Output → Input → Proses","Proses → Output → Input","Penyimpanan → Input → Output"],e:"Data dimasukkan (input), diolah (proses), lalu hasilnya ditampilkan (output)."},
+{q:"Bagaimana hubungan hardware, software, dan brainware?",o:["Ketiganya saling membutuhkan agar komputer dapat digunakan","Hardware bisa bekerja tanpa software","Software tidak butuh hardware","Brainware tidak diperlukan"],e:"Hardware butuh software untuk diperintah, dan keduanya dijalankan oleh brainware."},
+{q:"Windows, Android, dan Linux adalah contoh...",o:["Sistem operasi (software)","Perangkat output","Brainware","Perangkat penyimpanan"],e:"Sistem operasi adalah software yang mengatur kerja hardware."},
+{q:"Fungsi utama RAM pada komputer adalah...",o:["Menyimpan data sementara saat komputer bekerja","Menyimpan data secara permanen","Mencetak dokumen","Menampilkan gambar"],e:"RAM menyimpan data sementara, dan isinya hilang saat komputer dimatikan."}
+];
+
+/* ===== DASAR ===== */
+const C=11,R=15,S=32;
+const cv=document.getElementById('cv'),X=cv.getContext('2d');
+cv.width=C*S;cv.height=R*S;
+const $=id=>document.getElementById(id),ov=$('ov');
+let G=null,snd=true,ac=null,queue=[];
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+
+function beep(t){if(!snd)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain(),n=ac.currentTime;
+const f={ok:[660,990],bad:[220,120],coin:[880,1180],key:[520,780],win:[523,1046],hit:[160,90]}[t]||[440,440];
+o.type='square';o.connect(g);g.connect(ac.destination);o.frequency.setValueAtTime(f[0],n);o.frequency.setValueAtTime(f[1],n+.09);
+g.gain.setValueAtTime(.05,n);g.gain.exponentialRampToValueAtTime(.001,n+.26);o.start();o.stop(n+.27)}catch(e){}}
+
+/* ===== LABIRIN ===== */
+function maze(){
+  const m=Array.from({length:R},()=>Array(C).fill(1)),st=[[1,1]];m[1][1]=0;
+  while(st.length){
+    const [cx,cy]=st[st.length-1];
+    const d=[[2,0],[-2,0],[0,2],[0,-2]].filter(([a,b])=>{const nx=cx+a,ny=cy+b;return nx>0&&ny>0&&nx<C-1&&ny<R-1&&m[ny][nx]});
+    if(!d.length){st.pop();continue}
+    const [a,b]=d[Math.random()*d.length|0];
+    m[cy+b/2][cx+a/2]=0;m[cy+b][cx+a]=0;st.push([cx+a,cy+b]);
+  }
+  for(let i=0;i<16;i++){const px=1+(Math.random()*(C-2)|0),py=1+(Math.random()*(R-2)|0);if(m[py][px]&&(px%2)!==(py%2))m[py][px]=0}
+  return m;
+}
+function bfs(m,sx,sy){
+  const d=Array.from({length:R},()=>Array(C).fill(-1)),q=[[sx,sy]];d[sy][sx]=0;
+  while(q.length){const [x,y]=q.shift();[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const nx=x+a,ny=y+b;if(!m[ny][nx]&&d[ny][nx]<0){d[ny][nx]=d[y][x]+1;q.push([nx,ny])}})}
+  return d;
+}
+
+function init(state){
+  const m=maze(),d=bfs(m,1,1),E={x:C-2,y:R-2},free=[];
+  for(let y=1;y<R-1;y++)for(let x=1;x<C-1;x++)if(!m[y][x]&&d[y][x]>=4&&Math.abs(x-E.x)+Math.abs(y-E.y)>2)free.push({x,y,d:d[y][x]});
+  shuf(free);const used=[];
+  const take=(n,fn,s)=>{const o=[];[[fn,s],[null,0]].forEach(([f,sp])=>{for(const c of free){if(o.length>=n)return;if(used.includes(c)||(f&&!f(c))||used.some(u=>Math.abs(u.x-c.x)+Math.abs(u.y-c.y)<sp))continue;o.push(c);used.push(c)}});return o};
+  const key=take(1,c=>c.d>=10,3)[0],mons=take(CFG.MONSTERS,c=>c.d>=8,4),chests=take(CFG.CHESTS,null,3),stars=take(CFG.STARS,null,2);
+  G={m,E,state,score:0,lives:CFG.LIVES,right:0,asked:0,inv:0,mt:0,fx:[],
+    p:{x:1,y:1,rx:1,ry:1,f:1},key:{x:key.x,y:key.y,got:false},
+    chests:chests.map(c=>({x:c.x,y:c.y,open:false})),stars:stars.map(c=>({x:c.x,y:c.y})),
+    mons:mons.map(c=>({x:c.x,y:c.y,rx:c.x,ry:c.y,dx:0,dy:0}))};
+  if(state==='play')hide();
+  upd();
+}
+function start(){init('play')}
+
+/* ===== TAMPILAN HUD / OVERLAY ===== */
+function upd(){
+  $('sc').textContent=G.score;$('lv').textContent='♥'.repeat(Math.max(0,G.lives))+'♡'.repeat(Math.max(0,CFG.LIVES-G.lives));
+  $('ch').textContent=G.chests.filter(c=>c.open).length+'/'+CFG.CHESTS;
+  $('ky').innerHTML=G.key.got?'Kunci <b>✔</b>':'Kunci -';
+}
+function show(h){ov.innerHTML='<div class="card">'+h+'</div>';ov.style.display='flex'}
+function hide(){ov.style.display='none'}
+let tt;function toast(s){const t=$('toast');t.textContent=s;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1900)}
+function flash(c){cv.classList.remove('good','bad');void cv.offsetWidth;cv.classList.add(c)}
+function fx(x,y,txt,col){G.fx.push({x:x*S+S/2,y:y*S,txt,col,t:performance.now()})}
+
+function menu(){show('<h1>Informatika<br>Treasure Quest</h1><p class="sub">Sistem Komputasi · Kelas 8 SMP</p><div class="big">💰</div><p>Jelajahi labirin, hindari monster, dan jawab pertanyaan untuk membuka harta karun utama!</p><button class="btn" onclick="start()">Mulai</button><button class="btn alt" onclick="help(1)">Cara Bermain</button>')}
+function help(fromMenu){show('<h2>Cara Bermain</h2><ul><li>Gerakkan petualang dengan tombol panah di bawah layar.</li><li>Hindari monster. Tertabrak monster mengurangi 1 nyawa.</li><li>Sentuh peti harta karun, lalu jawab pertanyaannya. Jawaban benar +'+CFG.POINTS+' poin, jawaban salah mengurangi 1 nyawa.</li><li>Ambil kunci emas dan bintang ★ (bonus +'+CFG.BONUS+').</li><li>Buka semua '+CFG.CHESTS+' peti dan ambil kunci, lalu masuk ke pintu ungu di pojok kanan bawah.</li></ul><button class="btn" onclick="'+(fromMenu?'menu()':'resume()')+'">'+(fromMenu?'Kembali':'Lanjutkan')+'</button>')}
+function pause(){if(G.state!=='play')return;G.state='pause';show('<h2>Permainan Dijeda</h2><button class="btn" onclick="resume()">Lanjutkan</button><button class="btn alt" onclick="help(0)">Cara Bermain</button><button class="btn alt" onclick="start()">Mulai Ulang</button>')}
+function resume(){if(G.state==='pause'){G.state='play';hide()}}
+function end(win){
+  G.state='end';stopHold();beep(win?'win':'bad');
+  setTimeout(()=>show((win?'<div class="big">🏆</div><h2>Harta Karun Ditemukan!</h2><p>Hebat, kamu menguasai materi Sistem Komputasi.</p>':'<div class="big">💀</div><h2>Game Over</h2><p>Nyawa habis. Ayo coba lagi!</p>')+'<p class="stat">Skor: '+G.score+'</p><p class="stat">Jawaban benar: '+G.right+' dari '+G.asked+'</p><button class="btn" onclick="start()">Main Lagi</button>'),500);
+}
+
+/* ===== GERAKAN & INTERAKSI ===== */
+function move(dx,dy){
+  if(!G||G.state!=='play')return;
+  const nx=G.p.x+dx,ny=G.p.y+dy;if(dx)G.p.f=dx;
+  if(G.m[ny][nx])return;
+  G.p.x=nx;G.p.y=ny;step();
+}
+function step(){
+  const {x,y}=G.p;
+  if(!G.key.got&&G.key.x===x&&G.key.y===y){G.key.got=true;beep('key');toast('Kunci emas didapat!');fx(x,y,'Kunci!','#ffd24a');upd()}
+  const si=G.stars.findIndex(s=>s.x===x&&s.y===y);
+  if(si>=0){G.stars.splice(si,1);G.score+=CFG.BONUS;beep('coin');fx(x,y,'+'+CFG.BONUS,'#ffd24a');upd()}
+  hit();if(G.state!=='play')return;
+  const c=G.chests.find(c=>!c.open&&c.x===x&&c.y===y);
+  if(c)return quiz(c);
+  if(x===G.E.x&&y===G.E.y){
+    const left=G.chests.filter(c=>!c.open).length;
+    if(!left&&G.key.got){G.score+=CFG.POINTS;upd();end(true)}
+    else toast(left?'Pintu terkunci. Buka '+left+' peti lagi.':'Pintu terkunci. Cari kunci emas.');
+  }
+}
+function hit(){
+  if(G.inv>0||G.state!=='play')return;
+  if(G.mons.some(m=>m.x===G.p.x&&m.y===G.p.y)){
+    G.lives--;beep('hit');flash('bad');fx(G.p.x,G.p.y,'-1 ♥','#ff6b6b');
+    G.p.x=1;G.p.y=1;G.p.rx=1;G.p.ry=1;G.inv=1800;upd();
+    if(G.lives<=0)end(false);else toast('Awas monster! Kamu kembali ke awal.');
+  }
+}
+function moveMons(){
+  G.mons.forEach(m=>{
+    const ds=[[1,0],[-1,0],[0,1],[0,-1]].filter(([a,b])=>!G.m[m.y+b][m.x+a]);
+    let opts=ds.filter(([a,b])=>!(a===-m.dx&&b===-m.dy));if(!opts.length)opts=ds;
+    const dist=p=>Math.abs(m.x+p[0]-G.p.x)+Math.abs(m.y+p[1]-G.p.y);
+    let d;
+    if(Math.abs(m.x-G.p.x)+Math.abs(m.y-G.p.y)<=6&&Math.random()<.4)d=opts.slice().sort((p,q)=>dist(p)-dist(q))[0];
+    else d=opts[Math.random()*opts.length|0];
+    m.dx=d[0];m.dy=d[1];m.x+=d[0];m.y+=d[1];
+  });
+  hit();
+}
+
+/* ===== KUIS ===== */
+let cur=null;
+function quiz(c){
+  if(!queue.length)queue=shuf(Q.map((_,i)=>i));
+  const q=Q[queue.pop()];
+  const opts=shuf(q.o.map((t,i)=>({t,ok:i===0})));
+  cur={c,q,opts,done:false};G.state='quiz';stopHold();
+  show('<h2>Peti Harta Karun</h2><div class="q">'+q.q+'</div>'+opts.map((o,i)=>'<button class="opt" id="o'+i+'" onclick="ans('+i+')">'+o.t+'</button>').join('')+'<div id="fb"></div>');
+}
+function ans(i){
+  if(cur.done)return;cur.done=true;
+  const o=cur.opts[i],ok=o.ok;G.asked++;
+  cur.opts.forEach((p,j)=>{const b=$('o'+j);b.disabled=true;if(p.ok)b.classList.add('ok');else if(j===i)b.classList.add('no')});
+  let msg;
+  if(ok){G.right++;G.score+=CFG.POINTS;cur.c.open=true;beep('ok');flash('good');fx(cur.c.x,cur.c.y,'+'+CFG.POINTS,'#5ef0b4');
+    msg='<b style="color:#5ef0b4">Benar! +'+CFG.POINTS+' poin. Peti terbuka.</b><br>'+cur.q.e}
+  else{G.lives--;beep('bad');flash('bad');
+    msg='<b style="color:#ff6b6b">Jawaban kurang tepat. Nyawa berkurang 1.</b><br>'+cur.q.e+'<br>Peti masih terkunci. Keluar dari peti dan sentuh lagi untuk mencoba pertanyaan lain.'}
+  upd();
+  $('fb').innerHTML='<div class="fb">'+msg+'</div><button class="btn" onclick="after()">Lanjutkan</button>';
+}
+function after(){
+  hide();
+  if(G.lives<=0){end(false);return}
+  G.state='play';
+  if(G.chests.every(c=>c.open)&&!G.key.got)toast('Semua peti terbuka. Cari kunci emas!');
+  else if(G.chests.every(c=>c.open))toast('Semua peti terbuka. Menuju pintu ungu!');
+}
+
+/* ===== KONTROL ===== */
+const dirs={u:[0,-1],d:[0,1],l:[-1,0],r:[1,0]};let holdT=null;
+function stopHold(){clearInterval(holdT);holdT=null}
+document.querySelectorAll('.k').forEach(b=>{
+  const d=dirs[b.dataset.d];
+  b.addEventListener('pointerdown',e=>{e.preventDefault();stopHold();move(d[0],d[1]);holdT=setInterval(()=>move(d[0],d[1]),150);b.classList.add('on');try{b.setPointerCapture(e.pointerId)}catch(_){}});
+  ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,()=>{stopHold();b.classList.remove('on')}));
+  b.addEventListener('contextmenu',e=>e.preventDefault());
+});
+document.addEventListener('keydown',e=>{
+  const k={ArrowUp:'u',w:'u',ArrowDown:'d',s:'d',ArrowLeft:'l',a:'l',ArrowRight:'r',d:'r'}[e.key];
+  if(k){e.preventDefault();move(...dirs[k])}
+  if(e.key==='p'||e.key==='P'){G.state==='pause'?resume():pause()}
+});
+document.addEventListener('touchmove',e=>{if(!e.target.closest('.card'))e.preventDefault()},{passive:false});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
+$('bp').onclick=()=>G.state==='pause'?resume():pause();
+$('br').onclick=()=>{if(G.state==='menu')return;if(G.state==='play')G.state='pause';show('<h2>Mulai ulang?</h2><p>Skor dan peti akan diulang dari awal.</p><button class="btn" onclick="start()">Ya, Mulai Ulang</button><button class="btn alt" onclick="G.state===\'pause\'?resume():hide()">Batal</button>')};
+$('bs').onclick=()=>{snd=!snd;$('bs').textContent=snd?'🔊':'🔇'};
+
+/* ===== GAMBAR ===== */
+const R2=(c,x,y,w,h)=>{X.fillStyle=c;X.fillRect(x,y,w,h)};
+function drawChest(px,py,open,t){
+  R2('#2b1a0a',px+5,py+26,22,3);
+  R2('#a8602b',px+6,py+14,20,12);
+  if(open){R2('#ffd24a',px+8,py+14,16,4);R2('#8a4e20',px+6,py+5,20,5);const s=Math.sin(t/200)*2;R2('#fff6b0',px+15,py+8+s,3,3)}
+  else{R2('#c97a35',px+6,py+8,20,7);R2('#ffd24a',px+14,py+11,4,9);R2('#5a3210',px+15,py+14,2,3)}
+  R2('#6d3c15',px+6,py+14,20,2);
+}
+function drawMon(px,py,t,i){
+  const b=Math.sin(t/160+i*2)*2|0;
+  R2('#2b2a6b',px+6,py+27,20,3);
+  R2('#ff7a3d',px+6,py+13+b,20,12);R2('#ff7a3d',px+9,py+9+b,14,6);R2('#ff7a3d',px+4,py+19+b,24,6);
+  R2('#ffd24a',px+8,py+6+b,3,4);R2('#ffd24a',px+21,py+6+b,3,4);
+  R2('#fff',px+10,py+14+b,5,6);R2('#fff',px+18,py+14+b,5,6);
+  R2('#a00',px+12,py+17+b,3,3);R2('#a00',px+19,py+17+b,3,3);
+  R2('#5a1a00',px+9,py+12+b,6,2);R2('#5a1a00',px+18,py+12+b,6,2);
+  const w=(t/200|0)%2;for(let k=0;k<4;k++)R2('#ff7a3d',px+4+k*6,py+25+b+(w===k%2?0:1),4,2);
+}
+function drawPlayer(px,py,t){
+  const f=G.p.f>0?1:0,w=(t/120|0)%2,mv=Math.abs(G.p.x-G.p.rx)+Math.abs(G.p.y-G.p.ry)>.05;
+  R2('#2b2a6b',px+8,py+28,16,3);
+  R2('#3b6fd4',px+10,py+25,5,4+(mv&&w?1:0));R2('#3b6fd4',px+17,py+25,5,4+(mv&&!w?1:0));
+  R2('#5ef0b4',px+9,py+16,14,10);R2('#ffd24a',px+9,py+22,14,2);
+  R2('#ffd0a0',px+9,py+7,14,10);
+  R2('#ff6b6b',px+7,py+4,18,5);R2('#ff6b6b',px+11,py+1,10,4);
+  R2('#222',px+12+f,py+11,3,3);R2('#222',px+18+f,py+11,3,3);
+}
+function drawExit(px,py,t){
+  const ok=G.key.got&&G.chests.every(c=>c.open);
+  if(ok){const g=.5+.5*Math.sin(t/200);X.fillStyle='rgba(255,210,74,'+(.25+.3*g)+')';X.fillRect(px,py,S,S);
+    drawChest(px,py,false,t);R2('#fff6b0',px+4+g*20,py+4,3,3);R2('#fff6b0',px+24-g*18,py+20,3,3)}
+  else{R2('#7a3fb5',px+4,py+4,24,26);R2('#9a5fd5',px+4,py+4,24,4);R2('#4a1f7a',px+8,py+10,16,20);
+    R2('#ffd24a',px+12,py+17,8,7);R2('#ffd24a',px+14,py+12,4,6);R2('#2a1b00',px+15,py+19,2,3)}
+}
+function draw(t){
+  const m=G.m;
+  for(let j=0;j<R;j++)for(let i=0;i<C;i++){
+    const px=i*S,py=j*S;
+    if(m[j][i]){R2('#4a47a3',px,py,S,S);R2('#6f6cd6',px,py,S,5);R2('#38367f',px,py+S-5,S,5);R2('#38367f',px+((i+j)%2?8:20),py+9,2,S-18)}
+    else R2((i+j)%2?'#2a285c':'#242250',px,py,S,S);
+  }
+  drawExit(G.E.x*S,G.E.y*S,t);
+  if(!G.key.got){const b=Math.sin(t/200)*2|0,px=G.key.x*S,py=G.key.y*S+b;R2('#ffd24a',px+9,py+7,10,10);R2('#242250',px+12,py+10,4,4);R2('#ffd24a',px+17,py+12,9,3);R2('#ffd24a',px+22,py+15,3,4);R2('#ffd24a',px+18,py+15,2,3)}
+  X.font='24px sans-serif';X.textAlign='center';X.fillStyle='#ffd24a';
+  G.stars.forEach(s=>X.fillText('★',s.x*S+S/2,s.y*S+S/2+9+Math.sin(t/220+s.x)*2));
+  G.chests.forEach(c=>drawChest(c.x*S,c.y*S,c.open,t));
+  G.mons.forEach((o,i)=>{o.rx+=(o.x-o.rx)*.3;o.ry+=(o.y-o.ry)*.3;drawMon(o.rx*S,o.ry*S,t,i)});
+  const p=G.p;p.rx+=(p.x-p.rx)*.4;p.ry+=(p.y-p.ry)*.4;
+  if(!(G.inv>0&&((t/110|0)%2)))drawPlayer(p.rx*S,p.ry*S,t);
+  X.font='bold 14px "Trebuchet MS",sans-serif';
+  G.fx=G.fx.filter(f=>t-f.t<900);
+  G.fx.forEach(f=>{const a=t-f.t;X.globalAlpha=1-a/900;X.fillStyle='#000';X.fillText(f.txt,f.x+1,f.y-a*.03+1);X.fillStyle=f.col;X.fillText(f.txt,f.x,f.y-a*.03);X.globalAlpha=1});
+}
+
+let last=0;
+function loop(ts){
+  const dt=Math.min(50,ts-last);last=ts;
+  if(G.state==='play'){G.inv=Math.max(0,G.inv-dt);G.mt+=dt;if(G.mt>=380){G.mt=0;moveMons()}}
+  draw(ts);requestAnimationFrame(loop);
+}
+init('menu');menu();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
